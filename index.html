@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha Agenda — Simone</title>
+    
+    <!-- ✨ CONFIGURAÇÕES PARA VIRAR APP ✨ -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Agenda">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#667eea">
+    
+    <!-- 🎨 ÍCONE PERSONALIZADO (emoji de calendário em SVG) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23667eea' x='0' y='0' width='100' height='100' rx='20'/><text x='50' y='68' font-size='55' text-anchor='middle'>📅</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23667eea' x='0' y='0' width='100' height='100' rx='20'/><text x='50' y='68' font-size='55' text-anchor='middle'>📅</text></svg>">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            padding-top: env(safe-area-inset-top, 20px);
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+        .dia-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .dia-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+
+        .dia-btn.active {
+            background: white;
+            color: #764ba2;
+            font-weight: bold;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card.done {
+            opacity: 0.6;
+        }
+
+        .card.done .card-title {
+            text-decoration: line-through;
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .icon-atelie { background: #FFE5E5; }
+        .icon-conteudo { background: #E5F0FF; }
+        .icon-estudo { background: #E5FFE5; }
+        .icon-admin { background: #FFF5E5; }
+        .icon-pessoal { background: #F5E5FF; }
+        .icon-livre { background: #E5FFFF; }
+
+        .card-content {
+            flex: 1;
+        }
+
+        .card-time {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 3px;
+        }
+
+        .card-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .card-desc {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .card-check {
+            width: 28px;
+            height: 28px;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .card-check:hover {
+            border-color: #764ba2;
+        }
+
+        .card.done .card-check {
+            background: #764ba2;
+            border-color: #764ba2;
+            color: white;
+        }
+
+        .section-title {
+            color: white;
+            font-size: 0.9rem;
+            margin: 20px 0 10px;
+            opacity: 0.9;
+        }
+
+        .progress-bar {
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            height: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: white;
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s;
+        }
+
+        .frase-dia {
+            text-align: center;
+            color: white;
+            font-style: italic;
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+        }
+
+        .reset-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+
+        .reset-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>✨ Minha Agenda</h1>
+            <p id="data-hoje"></p>
+        </header>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+
+        <div class="dia-selector" id="dias"></div>
+
+        <div id="tarefas"></div>
+
+        <div class="frase-dia" id="frase"></div>
+
+        <button class="reset-btn" onclick="resetarDia()">🔄 Resetar dia</button>
+    </div>
+
+    <script>
+        const agenda = {
+            'Segunda': [
+                { hora: '5h - 6h', titulo: 'Oração', desc: 'Momento com Deus', tipo: 'pessoal', icon: '🙏' },
+                { hora: '6h - 7h', titulo: 'Preparo', desc: 'Café e organização', tipo: 'livre', icon: '☕' },
+                { hora: '7h - 11h', titulo: 'Ateliê', desc: 'Produção artística', tipo: 'atelie', icon: '🎨' },
+                { hora: '11h - 12h30', titulo: 'Almoço', desc: 'Pausa e descanso', tipo: 'livre', icon: '🍽️' },
+                { hora: '12h30 - 14h30', titulo: 'Mentoria', desc: 'Estudo com mentor', tipo: 'estudo', icon: '📖' },
+                { hora: '14h30 - 16h30', titulo: 'Conteúdo', desc: 'Criação e gravação', tipo: 'conteudo', icon: '📱' },
+                { hora: '17h30+', titulo: 'Tempo Livre', desc: 'Você merece descansar!', tipo: 'livre', icon: '🌙' }
+            ],
+            'Terça': [
+                { hora: '5h - 6h', titulo: 'Oração', desc: 'Momento com Deus', tipo: 'pessoal', icon: '🙏' },
+                { hora: '6h - 7h', titulo: 'Preparo', desc: 'Café e organização', tipo: 'livre', icon: '☕' },
+                { hora: '7h - 11h', titulo: 'Ateliê', desc: 'Produção artística', tipo: 'atelie', icon: '🎨' },
+                { hora: '11h - 12h30', titulo: 'Almoço', desc: 'Pausa e descanso', tipo: 'livre', icon: '🍽️' },
+                { hora: '12h30 - 14h30', titulo: 'Prática de Pintura', desc: 'Estudo técnico', tipo: 'estudo', icon: '🖌️' },
+                { hora: '14h30 - 16h30', titulo: 'Conteúdo', desc: 'Edição e publicação', tipo: 'conteudo', icon: '📱' },
+                { hora: '16h30 - 17h30', titulo: 'Financeiro', desc: 'Caixa da empresa', tipo: 'admin', icon: '💰' },
+                { hora: '17h30+', titulo: 'Tempo Livre', desc: 'Você merece descansar!', tipo: 'livre', icon: '🌙' }
+            ],
+            'Quarta': [
+                { hora: '5h - 6h', titulo: 'Oração', desc: 'Momento com Deus', tipo: 'pessoal', icon: '🙏' },
+                { hora: '6h - 7h', titulo: 'Preparo', desc: 'Café e organização', tipo: 'livre', icon: '☕' },
+                { hora: '7h - 11h', titulo: 'Ateliê', desc: 'Produção artística', tipo: 'atelie', icon: '🎨' },
+                { hora: '11h - 12h30', titulo: 'Almoço', desc: 'Pausa e descanso', tipo: 'livre', icon: '🍽️' },
+                { hora: '12h30 - 14h30', titulo: 'Estratégias de Mídias', desc: 'YouTube e redes', tipo: 'estudo', icon: '📊' },
+                { hora: '14h30 - 16h30', titulo: 'Conteúdo', desc: 'Planejamento de vídeos', tipo: 'conteudo', icon: '📱' },
+                { hora: '17h30+', titulo: 'Tempo Livre', desc: 'Você merece descansar!', tipo: 'livre', icon: '🌙' }
+            ],
+            'Quinta': [
+                { hora: '5h - 6h', titulo: 'Oração', desc: 'Momento com Deus', tipo: 'pessoal', icon: '🙏' },
+                { hora: '6h - 7h', titulo: 'Preparo', desc: 'Café e organização', tipo: 'livre', icon: '☕' },
+                { hora: '7h - 11h', titulo: 'Ateliê', desc: 'Produção artística', tipo: 'atelie', icon: '🎨' },
+                { hora: '11h - 12h30', titulo: 'Almoço', desc: 'Pausa e descanso', tipo: 'livre', icon: '🍽️' },
+                { hora: '12h30 - 14h30', titulo: 'Prática de Pintura', desc: 'Estudo técnico', tipo: 'estudo', icon: '🖌️' },
+                { hora: '14h30 - 16h30', titulo: 'Conteúdo', desc: 'Gravação', tipo: 'conteudo', icon: '📱' },
+                { hora: '16h30 - 17h30', titulo: 'Financeiro', desc: 'Caixa da empresa', tipo: 'admin', icon: '💰' },
+                { hora: '17h30+', titulo: 'Tempo Livre', desc: 'Você merece descansar!', tipo: 'livre', icon: '🌙' }
+            ],
+            'Sexta': [
+                { hora: '5h - 6h', titulo: 'Oração', desc: 'Momento com Deus', tipo: 'pessoal', icon: '🙏' },
+                { hora: '6h - 7h', titulo: 'Preparo', desc: 'Café e organização', tipo: 'livre', icon: '☕' },
+                { hora: '7h - 11h', titulo: 'Ateliê', desc: 'Produção artística', tipo: 'atelie', icon: '🎨' },
+                { hora: '11h - 12h30', titulo: 'Almoço', desc: 'Pausa e descanso', tipo: 'livre', icon: '🍽️' },
+                { hora: '12h30 - 14h30', titulo: 'Mentoria / Revisão', desc: 'Consolidar aprendizados', tipo: 'estudo', icon: '📖' },
+                { hora: '14h30 - 16h30', titulo: 'Conteúdo', desc: 'Finalização da semana', tipo: 'conteudo', icon: '📱' },
+                { hora: '17h30+', titulo: 'Tempo Livre', desc: 'Sexta é dia de descansar!', tipo: 'livre', icon: '🎉' }
+            ],
+            'Sábado': [
+                { hora: '6h - 7h', titulo: 'Oração', desc: 'Manhã tranquila', tipo: 'pessoal', icon: '🙏' },
+                { hora: '7h - 11h', titulo: 'Ateliê Leve', desc: 'Só se quiser (opcional)', tipo: 'atelie', icon: '🎨' },
+                { hora: '11h+', titulo: 'Livre', desc: 'Seu tempo, suas regras', tipo: 'livre', icon: '🌿' }
+            ],
+            'Domingo': [
+                { hora: 'Manhã', titulo: 'Oração / Igreja', desc: 'Momento espiritual', tipo: 'pessoal', icon: '⛪' },
+                { hora: 'Tarde', titulo: 'Descanso Total', desc: 'Nada de trabalho!', tipo: 'livre', icon: '😴' },
+                { hora: '18h - 18h30', titulo: 'Planejamento', desc: 'Organizar a semana', tipo: 'admin', icon: '📝' },
+                { hora: 'Noite', titulo: 'Relaxar', desc: 'Preparar para a semana', tipo: 'livre', icon: '🌙' }
+            ]
+        };
+
+        const frases = [
+            "Você não precisa fazer tudo. Só o que importa. 💜",
+            "Descanso também é produtividade.",
+            "Uma tarefa de cada vez. Você consegue.",
+            "Seu ateliê é seu santuário. Respeite seu ritmo.",
+            "Feito é melhor que perfeito.",
+            "Você está construindo algo lindo. Continue.",
+            "Respire. Você está indo bem."
+        ];
+
+        const dias = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+        let diaAtual = dias[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1];
+
+        function init() {
+            renderDias();
+            renderTarefas();
+            atualizarData();
+            renderFrase();
+        }
+
+        function atualizarData() {
+            const hoje = new Date();
+            const opcoes = { weekday: 'long', day: 'numeric', month: 'long' };
+            document.getElementById('data-hoje').textContent = hoje.toLocaleDateString('pt-BR', opcoes);
+        }
+
+        function renderDias() {
+            const container = document.getElementById('dias');
+            container.innerHTML = dias.map(dia => 
+                `<button class="dia-btn ${dia === diaAtual ? 'active' : ''}" onclick="selecionarDia('${dia}')">${dia.slice(0,3)}</button>`
+            ).join('');
+        }
+
+        function selecionarDia(dia) {
+            diaAtual = dia;
+            renderDias();
+            renderTarefas();
+        }
+
+        function getStorageKey() {
+            return `agenda_${diaAtual}_${new Date().toDateString()}`;
+        }
+
+        function getChecked() {
+            return JSON.parse(localStorage.getItem(getStorageKey()) || '[]');
+        }
+
+        function toggleCheck(index) {
+            let checked = getChecked();
+            if (checked.includes(index)) {
+                checked = checked.filter(i => i !== index);
+            } else {
+                checked.push(index);
+            }
+            localStorage.setItem(getStorageKey(), JSON.stringify(checked));
+            renderTarefas();
+        }
+
+        function renderTarefas() {
+            const container = document.getElementById('tarefas');
+            const tarefas = agenda[diaAtual];
+            const checked = getChecked();
+
+            container.innerHTML = tarefas.map((t, i) => `
+                <div class="card ${checked.includes(i) ? 'done' : ''}" onclick="toggleCheck(${i})">
+                    <div class="card-icon icon-${t.tipo}">${t.icon}</div>
+                    <div class="card-content">
+                        <div class="card-time">${t.hora}</div>
+                        <div class="card-title">${t.titulo}</div>
+                        <div class="card-desc">${t.desc}</div>
+                    </div>
+                    <div class="card-check">${checked.includes(i) ? '✓' : ''}</div>
+                </div>
+            `).join('');
+
+            const progresso = (checked.length / tarefas.length) * 100;
+            document.getElementById('progress').style.width = progresso + '%';
+        }
+
+        function renderFrase() {
+            document.getElementById('frase').textContent = frases[Math.floor(Math.random() * frases.length)];
+        }
+
+        function resetarDia() {
+            localStorage.removeItem(getStorageKey());
+            renderTarefas();
+        }
+
+        init();
+    </script>
+</body>
+</html>
